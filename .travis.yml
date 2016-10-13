@@ -1,0 +1,20 @@
+# config file for automatic testing at travis-ci.org
+language: python
+
+python:
+	- "3.5"
+	- "3.4"
+	- "3.3"
+	- "2.7"
+	- "2.6"
+	- "pypy"
+
+install:
+	- pip install --editable .
+	- pip install coveralls
+
+script:
+	# command to run tests and collect test coverage
+	- coverage run --source flask_url_for_helpers setup.py test
+
+after_success: coveralls
