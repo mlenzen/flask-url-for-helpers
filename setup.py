@@ -43,7 +43,7 @@ setup(
 	author_email='m.lenzen@gmail.com',
 	license='BSD',
 	url='https://github.com/mlenzen/flask-url-for-helpers',
-	packages=find_packages(exclude=('tests*', 'docs', 'examples')),
+	py_modules=['flask_url_for_helpers'],
 	include_package_data=True,
 	zip_safe=False,
 	package_data={
