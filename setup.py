@@ -7,7 +7,7 @@ This is the description for that library
 from __future__ import unicode_literals
 from codecs import open
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.test import test as TestCommand
 import sys
 
