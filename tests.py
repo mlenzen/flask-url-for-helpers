@@ -2,9 +2,31 @@ import flask
 import flask_sqlalchemy
 import pytest
 
-from flask_url_for_helpers import url_for_obj, register_url_for_obj
+from flask_url_for_helpers import url_for_obj, register_url_for_obj, url_update
 
 db = flask_sqlalchemy.SQLAlchemy()
+
+@pytest.fixture(scope='session')
+def app(request):
+	_app = flask.Flask(__name__)
+	_app.config.update({
+		'SERVER_NAME': 'localhost',
+		'TESTING': True,
+		'DEBUG': True,
+		})
+	db.init_app(_app)
+	ctx = _app.app_context()
+	ctx.push()
+
+	def fin():
+		ctx.pop()
+	request.addfinalizer(fin)
+	return _app
+
+
+@pytest.fixture(scope='session')
+def client(app):
+	return app.test_client()
 
 
 class Employee(db.Model):
@@ -19,7 +41,7 @@ class Manager(db.Model):
 	last_name = db.Column(db.String)
 
 
-def test_simple(app, client):
+def test_url_for_obj(app, client):
 
 	@register_url_for_obj(Employee)
 	@app.route('/employee/<int:id>')
