@@ -5,7 +5,14 @@ import pytest
 
 from flask_url_for_helpers import url_for_obj, register_url_for_obj, url_update
 
+app = flask.Flask(__name__)
+app.config.update({
+	'SERVER_NAME': 'localhost',
+	'TESTING': True,
+	'DEBUG': True,
+	})
 db = flask_sqlalchemy.SQLAlchemy()
+db.init_app(app)
 
 
 class Employee(db.Model):
@@ -20,36 +27,30 @@ class Manager(db.Model):
 	last_name = db.Column(db.String)
 
 
+@register_url_for_obj(Employee)
+@app.route('/employee/<int:id>')
+def employee_view(id):
+	pass
+
+
+@register_url_for_obj(Manager, {
+	'full_name': lambda manager: manager.first_name + '_' + manager.last_name,
+	})
+@app.route('/manager/<full_name>')
+def manager_view(full_name):
+	pass
+
+
 @pytest.fixture(scope='session')
-def app(request):
-	_app = flask.Flask(__name__)
-	_app.config.update({
-		'SERVER_NAME': 'localhost',
-		'TESTING': True,
-		'DEBUG': True,
-		})
-	db.init_app(_app)
-	ctx = _app.app_context()
+def app_context(request):
+	ctx = app.app_context()
 	ctx.push()
 	request.addfinalizer(lambda: ctx.pop())
-
-	@register_url_for_obj(Employee)
-	@_app.route('/employee/<int:id>')
-	def employee_view(id):
-		pass
-
-	@register_url_for_obj(Manager, {
-		'full_name': lambda manager: manager.first_name + '_' + manager.last_name,
-		})
-	@_app.route('/manager/<full_name>')
-	def manager_view(full_name):
-		pass
-
-	return _app
+	return app
 
 
 @pytest.fixture(scope='session')
-def client(app):
+def client(app_context):
 	return app.test_client()
 
 
