@@ -50,8 +50,6 @@ def dept_employee_view(dept, name):
 """
 from __future__ import absolute_import, unicode_literals
 from collections import Iterable
-from contextlib import suppress
-from functools import wraps
 from inspect import signature
 
 from flask import url_for, request
@@ -134,7 +132,6 @@ def register_url_for_obj(class_, blueprint=None, get_funcs=None):
 			that extract the appropriate value from an instance of the class.
 	"""
 	get_funcs = get_funcs or {}
-	# TODO use wraps to not fuck up the signature
 
 	def decorator(func):
 		class_function_mapping[class_] = (func, blueprint, get_funcs)
