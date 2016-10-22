@@ -1,54 +1,8 @@
-"""This module provides a few functions to generate URLs.
+"""
+flask_url_for_helpers
+---------------------
 
-`url_for_class`
--------------
-`url_for_class` can be called to get the a URL for a given object of a registered
-class. Classes are registered to endpoints using the
-`register_class` decorator. Parameters for the view are
-taken from attributes of the object or mapped in the decorator.
-
-Let's say you have models:
-
-class Employee(db.Model):
-
-	id = Column(Integer, primary_key=True)
-	name = Column(String)
-	dept_id = Column(Integer, ForeignKey('department.id'))
-
-	department = relationship(Department)
-
-class Department(db.Model):
-
-	id = Column(Integer, primary_key=True)
-	name = Column(String, unique=True)
-
-And a view for an individual employee:
-
-ufh = flask_url_for_helpers.URLForHelpers()
-
-@blueprint.route('/employee/<int:id>')
-@ufh.register_class(Employee)
-def employee_view(id):
-	employee = Employee.query.get_or_404(id)
-	return render_template('employee.html', employee=employee)
-
-You can now call `ufh.url_for_class(some_employee)` instead of
-`url_for('.employee', id=some_employee.id)`
-
-By default, endpoint arguments will be taken from attributes
-of the passed object. You can also specify a mapping of how to
-generate the parameters from the object.
-
-@blueprint.route('/employee/<dept>/<employee_name>')
-@ufh.register_class(models.Employee, {
-	'dept': lambda employee: employee.department.name,
-	})
-def dept_employee_view(dept, name):
-	employee = Employee.query\
-		.filter_by(name=name)\
-		.join('department')\
-		.filter(Department.name == dept)\
-		.one()
+Utilities to help generate URLs in Flask.
 """
 from __future__ import absolute_import, unicode_literals
 from contextlib import suppress
@@ -62,6 +16,63 @@ __version__ = '0.0.1'
 
 
 class URLForHelpers():
+	"""This extension provides a few functions to generate URLs.
+
+	`url_update`
+	------------
+	Used to generate a URL based on the current request selectively updating
+	parameters and/or the endpoint.
+
+	`url_for_class`
+	-------------
+	`url_for_class` can be called to get the a URL for a given object of a registered
+	class. Classes are registered to endpoints using the
+	`register_class` decorator. Parameters for the view are
+	taken from attributes of the object or mapped in the decorator.
+
+	Let's say you have models:
+
+	class Employee(db.Model):
+
+		id = Column(Integer, primary_key=True)
+		name = Column(String)
+		dept_id = Column(Integer, ForeignKey('department.id'))
+
+		department = relationship(Department)
+
+	class Department(db.Model):
+
+		id = Column(Integer, primary_key=True)
+		name = Column(String, unique=True)
+
+	And a view for an individual employee:
+
+	ufh = flask_url_for_helpers.URLForHelpers()
+
+	@blueprint.route('/employee/<int:id>')
+	@ufh.register_class(Employee)
+	def employee_view(id):
+		employee = Employee.query.get_or_404(id)
+		return render_template('employee.html', employee=employee)
+
+	You can now call `ufh.url_for_class(some_employee)` instead of
+	`url_for('.employee', id=some_employee.id)`
+
+	By default, endpoint arguments will be taken from attributes
+	of the passed object. You can also specify a mapping of how to
+	generate the parameters from the object.
+
+	@blueprint.route('/employee/<dept>/<employee_name>')
+	@ufh.register_class(models.Employee, {
+		'dept': lambda employee: employee.department.name,
+		})
+	def dept_employee_view(dept, name):
+		employee = Employee.query\
+			.filter_by(name=name)\
+			.join('department')\
+			.filter(Department.name == dept)\
+			.one()
+	"""
 
 	def __init__(self, app=None):
 		self.app = app
@@ -78,7 +89,21 @@ class URLForHelpers():
 		self._app_class_registry[app] = {}
 
 	def url_update(self, endpoint=None, **kwargs):
-		"""Return the URL for passed endpoint using args from current request and kwargs."""
+		"""Return a URL based on current request updated using passed args.
+
+		url_for is called using all current args (endpoint and kwargs) modified
+		by the parameters passed. Pameters include both parameters that match
+		the view signature and query string parameters.
+
+		If the existing request is at `url_for('ep1', param1='p1', param2='p2')`
+		* `url_update('ep2')` == `url_for('ep2', param1='p1', param2='p2')`
+		* `url_update(param1='newp1')` == `url_for('ep1', param1='newp1', param2='p2')`
+		* `url_update('ep2', param1='newp1')` == `url_for('ep2', param1='newp1', param2='p2')`
+
+		Args:
+			endpoint: If not None, new endpoint to generate URL for.
+			**kwargs: Keyword args to pass to url_for to overwrite current args.
+		"""
 		# request.args contains parameters from the query string
 		# request.view_args contains parameters that matched the view signature
 		if endpoint is None:
@@ -116,6 +141,8 @@ class URLForHelpers():
 		raise ValueError('No view function registered for {}'.format(obj_type))
 
 	def url_for_class(self, obj):
+		"""Get a url for an object based on it's class.
+		"""
 		obj_type = type(obj)
 		endpoint_name, extract_funcs = self._get_app_class_endpoint(current_app, obj_type)
 		kwargs = {}
