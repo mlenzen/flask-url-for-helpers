@@ -5,15 +5,9 @@ import pytest
 
 from flask_url_for_helpers import URLForHelpers, url_for_obj, register_url_for_obj, url_update
 
-app = flask.Flask(__name__)
-app.config.update({
-	'SERVER_NAME': 'localhost',
-	'TESTING': True,
-	'DEBUG': True,
-	})
-url_for_helpers = URLForHelpers(app)
-db = flask_sqlalchemy.SQLAlchemy(app)
-bp = flask.Blueprint('bp', __name__)
+
+db = flask_sqlalchemy.SQLAlchemy()
+url_for_helpers = URLForHelpers()
 
 
 class Employee(db.Model):
@@ -28,10 +22,7 @@ class Manager(db.Model):
 	last_name = db.Column(db.String)
 
 
-@register_url_for_obj(Employee)
-@app.route('/employee/<int:id>')
-def employee_view(id):
-	pass
+bp = flask.Blueprint('bp', __name__)
 
 
 @register_url_for_obj(Manager, bp, {
@@ -41,7 +32,21 @@ def employee_view(id):
 def manager_view(full_name):
 	pass
 
+app = flask.Flask(__name__)
+app.config.update({
+	'SERVER_NAME': 'localhost',
+	'TESTING': True,
+	'DEBUG': True,
+	})
+db.init_app(app)
+url_for_helpers.init_app(app)
 app.register_blueprint(bp)
+
+
+@register_url_for_obj(Employee)
+@app.route('/employee/<int:id>')
+def employee_view(id):
+	pass
 
 
 @pytest.fixture(scope='session')
