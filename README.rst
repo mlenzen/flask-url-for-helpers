@@ -16,7 +16,7 @@ Overview
 
 This package includes one module - ``flask_url_for_helpers``.
 
-Tested against Python 2.6, 2.7, 3.3, 3.4, 3.5 & PyPy.
+Tested against Python 3.3+.
 
 Getting Started
 ===============

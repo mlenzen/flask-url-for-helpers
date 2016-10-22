@@ -5,7 +5,6 @@ flask_url_for_helpers
 Utilities to help generate URLs in Flask.
 """
 from __future__ import absolute_import, unicode_literals
-from contextlib import suppress
 from collections import Iterable, defaultdict
 from inspect import signature
 
@@ -136,8 +135,10 @@ class URLForHelpers():
 
 	def _get_app_class_endpoint(self, app, class_):
 		for registry in self._all_app_registries(app):
-			with suppress(KeyError):
+			try:
 				return registry[class_]
+			except KeyError:
+				pass
 		raise ValueError('No view function registered for {}'.format(obj_type))
 
 	def url_for_class(self, obj):

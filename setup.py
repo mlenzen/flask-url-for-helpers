@@ -29,7 +29,7 @@ class PyTest(TestCommand):
 
 # Get the long description from the relevant file
 here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.rst')) as f:
 	long_description = f.read()
 
 
@@ -60,19 +60,15 @@ setup(
 		test=PyTest,
 	),
 	classifiers=[
-		'Development Status :: 3 - Alpha',
+		'Development Status :: 4 - Beta',
 		'Intended Audience :: Developers',
 		'Topic :: Software Development',
 		'License :: OSI Approved :: BSD License',
 		'Programming Language :: Python',
-		'Programming Language :: Python :: 2',
-		'Programming Language :: Python :: 2.6',
-		'Programming Language :: Python :: 2.7',
 		'Programming Language :: Python :: 3',
 		'Programming Language :: Python :: 3.3',
 		'Programming Language :: Python :: 3.4',
 		'Programming Language :: Python :: 3.5',
-		'Programming Language :: Python :: Implementation :: PyPy',
 		'Environment :: Web Environment',
 		'Operating System :: OS Independent',
 		'Topic :: Software Development :: Libraries :: Python Modules'
