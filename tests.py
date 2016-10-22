@@ -1,3 +1,4 @@
+"""Tests for flask_url_for_helpers."""
 import flask
 import flask_sqlalchemy
 import pytest
@@ -5,6 +6,7 @@ import pytest
 from flask_url_for_helpers import url_for_obj, register_url_for_obj, url_update
 
 db = flask_sqlalchemy.SQLAlchemy()
+
 
 @pytest.fixture(scope='session')
 def app(request):
@@ -41,13 +43,18 @@ class Manager(db.Model):
 	last_name = db.Column(db.String)
 
 
-def test_url_for_obj(app, client):
+def test_url_for_obj_simple(app, client):
 
 	@register_url_for_obj(Employee)
 	@app.route('/employee/<int:id>')
 	def employee_view(id):
 		pass
 
+	employee = Employee(id=1)
+	assert url_for_obj(employee) == flask.url_for('employee_view', id=1)
+
+
+def test_url_for_obj_mapped(app, client):
 	@register_url_for_obj(Manager, {
 		'full_name': lambda manager: manager.first_name + '_' + manager.last_name,
 		})
@@ -55,7 +62,5 @@ def test_url_for_obj(app, client):
 	def manager_view(full_name):
 		pass
 
-	employee = Employee(id=1)
-	assert url_for_obj(employee) == flask.url_for('employee_view', id=1)
 	manager = Manager(first_name='M', last_name='Lenzen')
 	assert url_for_obj(manager) == flask.url_for('manager_view', full_name='M_Lenzen')
