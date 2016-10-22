@@ -32,6 +32,7 @@ project_root = os.path.dirname(cwd)
 sys.path.insert(0, project_root)
 
 import flask_url_for_helpers
+import alabaster
 
 # -- General configuration ---------------------------------------------
 
@@ -40,7 +41,13 @@ import flask_url_for_helpers
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinxcontrib.napoleon']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'sphinxcontrib.napoleon',
+    'sphinx.ext.doctest',
+    'alabaster',
+    ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -111,17 +118,27 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-sys.path.append(os.path.abspath('_themes'))
-html_theme_path = ['_themes']
-html_theme = 'flask'
+# sys.path.append(os.path.abspath('_themes'))
+# html_theme_path = ['_themes']
+html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    # 'logo': 'logo.svg',
+    'github_user': 'mlenzen',
+    'github_repo': 'flask_url_for_helpers',
+    'description': 'Flask-URL-For-Helpers - utils to generate URLs in Flask.',
+    'github_banner': True,
+    'travis_button': True,
+    'coveralls_button': True,
+    # 'analytics_id': 'UA-4495487-4',
+    'pypi_name': 'flask-url-for-helpers',
+    }
 
 # Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
+html_theme_path = [alabaster.get_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -155,7 +172,15 @@ html_last_updated_fmt = '%Y-%b-%d'
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+    '**': [
+        'about.html',
+        'navigation.html',
+        'relations.html',
+        'searchbox.html',
+        'donate.html',
+        ]
+    }
 
 # Additional templates that should be rendered to pages, maps page names
 # to template names.
