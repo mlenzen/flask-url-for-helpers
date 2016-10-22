@@ -76,20 +76,16 @@ class URLForHelpers():
 	def init_app(self, app):
 		app.jinja_env.update({
 			'url_for_obj': url_for_obj,
-			'url_update_args': url_update_args,
-			'url_update_endpoint_args': url_update_endpoint_args,
+			'url_update': url_update,
 			})
 
 
-def url_update_args(**kwargs):
-	"""Take the current URL and update paramters, keeping all unspecified the same."""
-	return url_update_endpoint_args(request.endpoint, **kwargs)
-
-
-def url_update_endpoint_args(endpoint, **kwargs):
+def url_update(endpoint=None, **kwargs):
 	"""Return the URL for passed endpoint using args from current request and kwargs."""
 	# request.args contains parameters from the query string
 	# request.view_args contains parameters that matched the view signature
+	if endpoint is None:
+		endpoint = request.endpoint
 	args = MultiDict(request.args)
 	args.update(request.view_args)
 	for arg, value in kwargs.items():
