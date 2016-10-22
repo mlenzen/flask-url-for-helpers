@@ -13,6 +13,7 @@ app.config.update({
 	})
 db = flask_sqlalchemy.SQLAlchemy()
 db.init_app(app)
+bp = flask.Blueprint('bp', __name__)
 
 
 class Employee(db.Model):
@@ -33,12 +34,14 @@ def employee_view(id):
 	pass
 
 
-@register_url_for_obj(Manager, {
+@register_url_for_obj(Manager, bp, {
 	'full_name': lambda manager: manager.first_name + '_' + manager.last_name,
 	})
-@app.route('/manager/<full_name>')
+@bp.route('/manager/<full_name>')
 def manager_view(full_name):
 	pass
+
+app.register_blueprint(bp)
 
 
 @pytest.fixture(scope='session')
@@ -61,4 +64,4 @@ def test_url_for_obj_simple(client):
 
 def test_url_for_obj_mapped(client):
 	manager = Manager(first_name='M', last_name='Lenzen')
-	assert url_for_obj(manager) == flask.url_for('manager_view', full_name='M_Lenzen')
+	assert url_for_obj(manager) == flask.url_for('bp.manager_view', full_name='M_Lenzen')

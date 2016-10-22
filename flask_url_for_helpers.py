@@ -50,6 +50,7 @@ def dept_employee_view(dept, name):
 """
 from __future__ import absolute_import, unicode_literals
 from collections import Iterable
+from contextlib import suppress
 from functools import wraps
 from inspect import signature
 
@@ -101,18 +102,13 @@ def url_update(endpoint=None, **kwargs):
 	return url_for(endpoint, **args)
 
 
-# TODO
-#	store class_function_mapping in app context?
-#	Don't assume it's part of a blueprint by adding '.' before the function name
-# 	  Is there a way of checking? Should it be an option in register?
-
 class_function_mapping = {}
 
 
 def url_for_obj(obj):
 	obj_type = type(obj)
 	try:
-		render_func, get_funcs = class_function_mapping[obj_type]
+		render_func, blueprint, get_funcs = class_function_mapping[obj_type]
 	except KeyError:
 		raise ValueError('No view function registered for {}'.format(obj_type))
 	kwargs = {}
@@ -121,14 +117,14 @@ def url_for_obj(obj):
 			kwargs[arg] = get_funcs[arg](obj)
 		else:
 			kwargs[arg] = getattr(obj, arg)
-	if request and request.blueprint:
-		endpoint_name = '%s.%s' % (request.blueprint, render_func.__name__)
+	if blueprint:
+		endpoint_name = '%s.%s' % (blueprint.name, render_func.__name__)
 	else:
 		endpoint_name = render_func.__name__
 	return url_for(endpoint_name, **kwargs)
 
 
-def register_url_for_obj(class_, get_funcs=None):
+def register_url_for_obj(class_, blueprint=None, get_funcs=None):
 	"""A decorator to register an endpoint as the way to display an object of
 	`class_`.
 
@@ -141,6 +137,6 @@ def register_url_for_obj(class_, get_funcs=None):
 	# TODO use wraps to not fuck up the signature
 
 	def decorator(func):
-		class_function_mapping[class_] = (func, get_funcs)
+		class_function_mapping[class_] = (func, blueprint, get_funcs)
 		return func
 	return decorator
