@@ -25,7 +25,7 @@ class Manager(db.Model):
 bp = flask.Blueprint('bp', __name__)
 
 
-@ufh.register_url_for_obj(Manager, bp, {
+@ufh.register_class(Manager, bp, {
 	'full_name': lambda manager: manager.first_name + '_' + manager.last_name,
 	})
 @bp.route('/manager/<full_name>')
@@ -43,7 +43,7 @@ ufh.init_app(app)
 app.register_blueprint(bp)
 
 
-@ufh.register_url_for_obj(Employee)
+@ufh.register_class(Employee)
 @app.route('/employee/<int:id>')
 def employee_view(id):
 	pass
@@ -62,18 +62,18 @@ def client(app_context):
 	return app.test_client()
 
 
-def test_url_for_obj_simple(client):
+def test_url_for_class_simple(client):
 	employee = Employee(id=1)
-	assert ufh.url_for_obj(employee) == flask.url_for('employee_view', id=1)
+	assert ufh.url_for_class(employee) == flask.url_for('employee_view', id=1)
 
 
-def test_url_for_obj_mapped(client):
+def test_url_for_class_mapped(client):
 	manager = Manager(first_name='M', last_name='Lenzen')
-	assert ufh.url_for_obj(manager) == flask.url_for('bp.manager_view', full_name='M_Lenzen')
+	assert ufh.url_for_class(manager) == flask.url_for('bp.manager_view', full_name='M_Lenzen')
 
 
-def test_url_for_obj_in_template(client):
+def test_url_for_class_in_template(client):
 	employee = Employee(id=1)
-	template = """{{ url_for_obj(employee) }}"""
+	template = """{{ url_for_class(employee) }}"""
 	rendered = flask.render_template_string(template, employee=employee)
 	assert rendered == flask.url_for('employee_view', id=1)

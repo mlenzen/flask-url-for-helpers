@@ -1,10 +1,10 @@
 """This module provides a few functions to generate URLs.
 
-`url_for_obj`
+`url_for_class`
 -------------
-`url_for_obj` can be called to get the a URL for a given object of a registered
+`url_for_class` can be called to get the a URL for a given object of a registered
 class. Classes are registered to endpoints using the
-`register_url_for_obj` decorator. Parameters for the view are
+`register_class` decorator. Parameters for the view are
 taken from attributes of the object or mapped in the decorator.
 
 Let's say you have models:
@@ -27,12 +27,12 @@ And a view for an individual employee:
 ufh = flask_url_for_helpers.URLForHelpers()
 
 @blueprint.route('/employee/<int:id>')
-@ufh.register_url_for_obj(Employee)
+@ufh.register_class(Employee)
 def employee_view(id):
 	employee = Employee.query.get_or_404(id)
 	return render_template('employee.html', employee=employee)
 
-You can now call `ufh.url_for_obj(some_employee)` instead of
+You can now call `ufh.url_for_class(some_employee)` instead of
 `url_for('.employee', id=some_employee.id)`
 
 By default, endpoint arguments will be taken from attributes
@@ -40,7 +40,7 @@ of the passed object. You can also specify a mapping of how to
 generate the parameters from the object.
 
 @blueprint.route('/employee/<dept>/<employee_name>')
-@ufh.register_url_for_obj(models.Employee, {
+@ufh.register_class(models.Employee, {
 	'dept': lambda employee: employee.department.name,
 	})
 def dept_employee_view(dept, name):
@@ -64,13 +64,13 @@ class URLForHelpers():
 
 	def __init__(self, app=None):
 		self.app = app
-		self.url_for_obj_mapping = {}
+		self.class_registry = {}
 		if app is not None:
 			self.init_app(app)
 
 	def init_app(self, app):
 		app.context_processor(lambda: {
-			'url_for_obj': self.url_for_obj,
+			'url_for_class': self.url_for_class,
 			'url_update': self.url_update,
 			})
 
@@ -94,11 +94,11 @@ class URLForHelpers():
 				args[key] = args[key][0]
 		return url_for(endpoint, **args)
 
-	def url_for_obj(self, obj):
+	def url_for_class(self, obj):
 		obj_type = type(obj)
 		try:
-			endpoint_name, extract_funcs = self.url_for_obj_mapping[obj_type]
-			# render_func, blueprint, get_funcs = self.url_for_obj_mapping[obj_type]
+			endpoint_name, extract_funcs = self.class_registry[obj_type]
+			# render_func, blueprint, get_funcs = self.class_registry[obj_type]
 		except KeyError:
 			raise ValueError('No view function registered for {}'.format(obj_type))
 		kwargs = {}
@@ -106,8 +106,7 @@ class URLForHelpers():
 			kwargs[kwarg] = extract_func(obj)
 		return url_for(endpoint_name, **kwargs)
 
-
-	def register_url_for_obj(self, class_, blueprint=None, extract_funcs=None):
+	def register_class(self, class_, blueprint=None, extract_funcs=None):
 		"""A decorator to register an endpoint as the way to display an object of
 		`class_`.
 
@@ -126,6 +125,6 @@ class URLForHelpers():
 			for arg in signature(func).parameters:
 				if arg not in extract_funcs:
 					extract_funcs[arg] = lambda obj: getattr(obj, arg)
-			self.url_for_obj_mapping[class_] = (endpoint_name, extract_funcs)
+			self.class_registry[class_] = (endpoint_name, extract_funcs)
 			return func
 		return decorator

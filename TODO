@@ -1,16 +1,16 @@
 README
 docs
-Where to store url_for_obj_mapping
-	extensions is probably the wrong place, then we can't register the same extension
+Where to store class_registry
+	extension is probably the wrong place, then we can't register the same extension
 	to multiple apps
 	Can't be on the app, we need to be able to register endpoints before an app is
 	created.
+	Stash blueprint registered endpoints until init_app?
 how to store blueprint with render_func or inspect to get it without doing it explicitly
 allow for missing attributes if not required for view
-rename url_for_obj stuff. maybe register_type and url_from_type
 
 testing
 ----
-test raising an error with url_for_obj
+test raising an error with url_for_class
 tests to not require flask_sqlalchemy
 tests for url_update
