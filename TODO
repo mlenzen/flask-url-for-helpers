@@ -1,8 +1,13 @@
 README
 docs
-store url_for_obj on app (not context)?
-how to store blueprint with render_func or inspect to get it
+Where to store url_for_obj_mapping
+	extensions is probably the wrong place, then we can't register the same extension
+	to multiple apps
+	Can't be on the app, we need to be able to register endpoints before an app is
+	created.
+how to store blueprint with render_func or inspect to get it without doing it explicitly
 allow for missing attributes if not required for view
+rename url_for_obj stuff. maybe register_type and url_from_type
 
 testing
 ----
