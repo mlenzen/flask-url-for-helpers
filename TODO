@@ -1,11 +1,5 @@
 README
 docs
-Where to store class_registry
-	extension is probably the wrong place, then we can't register the same extension
-	to multiple apps
-	Can't be on the app, we need to be able to register endpoints before an app is
-	created.
-	Stash blueprint registered endpoints until init_app?
 how to store blueprint with render_func or inspect to get it without doing it explicitly
 allow for missing attributes if not required for view
 

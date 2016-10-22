@@ -51,10 +51,11 @@ def dept_employee_view(dept, name):
 		.one()
 """
 from __future__ import absolute_import, unicode_literals
-from collections import Iterable
+from contextlib import suppress
+from collections import Iterable, defaultdict
 from inspect import signature
 
-from flask import url_for, request
+from flask import url_for, request, Flask, Blueprint, current_app
 from werkzeug.datastructures import MultiDict
 
 __version__ = '0.0.1'
@@ -64,7 +65,8 @@ class URLForHelpers():
 
 	def __init__(self, app=None):
 		self.app = app
-		self.class_registry = {}
+		self._app_class_registry = {}
+		self._blueprint_class_registry = defaultdict(dict)
 		if app is not None:
 			self.init_app(app)
 
@@ -73,6 +75,7 @@ class URLForHelpers():
 			'url_for_class': self.url_for_class,
 			'url_update': self.url_update,
 			})
+		self._app_class_registry[app] = {}
 
 	def url_update(self, endpoint=None, **kwargs):
 		"""Return the URL for passed endpoint using args from current request and kwargs."""
@@ -94,19 +97,33 @@ class URLForHelpers():
 				args[key] = args[key][0]
 		return url_for(endpoint, **args)
 
+	def _app_registry(self, app):
+		try:
+			return self._app_class_registry[app]
+		except KeyError:
+			raise Exception('Flask-URL-For-Helpers not initialized for app')
+
+	def _all_app_registries(self, app):
+		"""Yield registries for app and all blueprints."""
+		yield self._app_registry(app)
+		for blueprint in app.blueprints.values():
+			yield self._blueprint_class_registry[blueprint]
+
+	def _get_app_class_endpoint(self, app, class_):
+		for registry in self._all_app_registries(app):
+			with suppress(KeyError):
+				return registry[class_]
+		raise ValueError('No view function registered for {}'.format(obj_type))
+
 	def url_for_class(self, obj):
 		obj_type = type(obj)
-		try:
-			endpoint_name, extract_funcs = self.class_registry[obj_type]
-			# render_func, blueprint, get_funcs = self.class_registry[obj_type]
-		except KeyError:
-			raise ValueError('No view function registered for {}'.format(obj_type))
+		endpoint_name, extract_funcs = self._get_app_class_endpoint(current_app, obj_type)
 		kwargs = {}
 		for kwarg, extract_func in extract_funcs.items():
 			kwargs[kwarg] = extract_func(obj)
 		return url_for(endpoint_name, **kwargs)
 
-	def register_class(self, class_, blueprint=None, extract_funcs=None):
+	def register_class(self, class_, app_or_blueprint, extract_funcs=None):
 		"""A decorator to register an endpoint as the way to display an object of
 		`class_`.
 
@@ -118,13 +135,15 @@ class URLForHelpers():
 		extract_funcs = extract_funcs and extract_funcs.copy() or {}
 
 		def decorator(func):
-			if blueprint:
-				endpoint_name = '%s.%s' % (blueprint.name, func.__name__)
-			else:
-				endpoint_name = func.__name__
 			for arg in signature(func).parameters:
 				if arg not in extract_funcs:
 					extract_funcs[arg] = lambda obj: getattr(obj, arg)
-			self.class_registry[class_] = (endpoint_name, extract_funcs)
+			if isinstance(app_or_blueprint, Flask):
+				endpoint_name = func.__name__
+				registry = self._app_registry(app_or_blueprint)
+			elif isinstance(app_or_blueprint, Blueprint):
+				endpoint_name = '%s.%s' % (app_or_blueprint.name, func.__name__)
+				registry = self._blueprint_class_registry[app_or_blueprint]
+			registry[class_] = (endpoint_name, extract_funcs)
 			return func
 		return decorator

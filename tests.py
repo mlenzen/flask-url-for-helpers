@@ -43,7 +43,7 @@ ufh.init_app(app)
 app.register_blueprint(bp)
 
 
-@ufh.register_class(Employee)
+@ufh.register_class(Employee, app)
 @app.route('/employee/<int:id>')
 def employee_view(id):
 	pass
