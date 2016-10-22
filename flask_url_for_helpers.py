@@ -106,23 +106,17 @@ class_function_mapping = {}
 def url_for_obj(obj):
 	obj_type = type(obj)
 	try:
-		render_func, blueprint, get_funcs = class_function_mapping[obj_type]
+		endpoint_name, extract_funcs = class_function_mapping[obj_type]
+		# render_func, blueprint, get_funcs = class_function_mapping[obj_type]
 	except KeyError:
 		raise ValueError('No view function registered for {}'.format(obj_type))
 	kwargs = {}
-	for arg in signature(render_func).parameters:
-		if arg in get_funcs:
-			kwargs[arg] = get_funcs[arg](obj)
-		else:
-			kwargs[arg] = getattr(obj, arg)
-	if blueprint:
-		endpoint_name = '%s.%s' % (blueprint.name, render_func.__name__)
-	else:
-		endpoint_name = render_func.__name__
+	for kwarg, extract_func in extract_funcs.items():
+		kwargs[kwarg] = extract_func(obj)
 	return url_for(endpoint_name, **kwargs)
 
 
-def register_url_for_obj(class_, blueprint=None, get_funcs=None):
+def register_url_for_obj(class_, blueprint=None, extract_funcs=None):
 	"""A decorator to register an endpoint as the way to display an object of
 	`class_`.
 
@@ -131,9 +125,16 @@ def register_url_for_obj(class_, blueprint=None, get_funcs=None):
 		get_funcs: optional mapping of endpoint argument names to functions
 			that extract the appropriate value from an instance of the class.
 	"""
-	get_funcs = get_funcs or {}
+	extract_funcs = extract_funcs and extract_funcs.copy() or {}
 
 	def decorator(func):
-		class_function_mapping[class_] = (func, blueprint, get_funcs)
+		if blueprint:
+			endpoint_name = '%s.%s' % (blueprint.name, func.__name__)
+		else:
+			endpoint_name = func.__name__
+		for arg in signature(func).parameters:
+			if arg not in extract_funcs:
+				extract_funcs[arg] = lambda obj: getattr(obj, arg)
+		class_function_mapping[class_] = (endpoint_name, extract_funcs)
 		return func
 	return decorator
