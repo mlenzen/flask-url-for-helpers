@@ -4,29 +4,28 @@ Flask-URL-For-Helpers
 
 This is the description for that library
 """
-from __future__ import unicode_literals
-from codecs import open
-import os
+import os.path
+import sys
+
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
-import sys
 
 
 class PyTest(TestCommand):
-
-	"""Set up the py.test test runner."""
+	"""TestCommand to run py.test."""
 
 	def finalize_options(self):
-		"""Set options for the command line."""
+		"""Finalize option before test is run."""
 		TestCommand.finalize_options(self)
-		self.test_args = ['tests']
+		self.test_args = ['tests.py']
 		self.test_suite = True
 
 	def run_tests(self):
-		"""Execute the test runner command."""
-		# Import here, because outside the required eggs aren't loaded yet
+		"""Run tests."""
 		import pytest
-		sys.exit(pytest.main(self.test_args))
+		errcode = pytest.main(self.test_args)
+		sys.exit(errcode)
+
 
 # Get the long description from the relevant file
 here = os.path.abspath(os.path.dirname(__file__))
@@ -55,6 +54,7 @@ setup(
 	],
 	tests_require=[
 		'pytest',
+		'flask_sqlalchemy',
 	],
 	cmdclass=dict(
 		test=PyTest,
