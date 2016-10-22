@@ -52,7 +52,7 @@ from __future__ import absolute_import, unicode_literals
 from collections import Iterable
 from inspect import signature
 
-from flask import url_for, request
+from flask import url_for, request, Flask, Blueprint
 from werkzeug.datastructures import MultiDict
 
 # Starting with Flask 0.9, the _app_ctx_stack is the correct one,
@@ -73,7 +73,8 @@ class URLForHelpers():
 			self.init_app(app)
 
 	def init_app(self, app):
-		app.jinja_env.update({
+		self.app = app
+		app.context_processor(lambda: {
 			'url_for_obj': url_for_obj,
 			'url_update': url_update,
 			})

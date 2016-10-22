@@ -3,7 +3,7 @@ import flask
 import flask_sqlalchemy
 import pytest
 
-from flask_url_for_helpers import url_for_obj, register_url_for_obj, url_update
+from flask_url_for_helpers import URLForHelpers, url_for_obj, register_url_for_obj, url_update
 
 app = flask.Flask(__name__)
 app.config.update({
@@ -11,8 +11,8 @@ app.config.update({
 	'TESTING': True,
 	'DEBUG': True,
 	})
-db = flask_sqlalchemy.SQLAlchemy()
-db.init_app(app)
+url_for_helpers = URLForHelpers(app)
+db = flask_sqlalchemy.SQLAlchemy(app)
 bp = flask.Blueprint('bp', __name__)
 
 
@@ -65,3 +65,10 @@ def test_url_for_obj_simple(client):
 def test_url_for_obj_mapped(client):
 	manager = Manager(first_name='M', last_name='Lenzen')
 	assert url_for_obj(manager) == flask.url_for('bp.manager_view', full_name='M_Lenzen')
+
+
+def test_url_for_obj_in_template(client):
+	employee = Employee(id=1)
+	template = """{{ url_for_obj(employee) }}"""
+	rendered = flask.render_template_string(template, employee=employee)
+	assert rendered == flask.url_for('employee_view', id=1)
