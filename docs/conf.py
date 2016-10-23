@@ -128,7 +128,7 @@ html_theme = 'alabaster'
 html_theme_options = {
     # 'logo': 'logo.svg',
     'github_user': 'mlenzen',
-    'github_repo': 'flask_url_for_helpers',
+    'github_repo': 'flask-url-for-helpers',
     'description': 'Flask-URL-For-Helpers - utils to generate URLs in Flask.',
     'github_banner': True,
     'travis_button': True,
